@@ -81,6 +81,37 @@ The project was deployed via Vercel as a static application (using the "Other" f
 
 ### Project Documentation
 For Software:
+1. Setup & Installation
+Since the project was designed to be as lightweight and accessible as possible, we opted out of using heavy node modules or build steps (like Webpack or React).
+
+Clone the Repository:
+bash
+git clone https://github.com/reyyhann77/the_balarama_gazzette.git
+cd the_balarama_gazzette
+Dependencies: No npm install is required. All external libraries (like Google MediaPipe) are fetched dynamically via CDN at runtime.
+2. Development & Coding
+Structure: Everything is housed inside a single monolithic index.html file containing the DOM structure, embedded <style> tags for CSS, and <script> tags for the game logic.
+Layout: We used CSS Grid and Flexbox to build the responsive newspaper-style columns and puzzle boards.
+Game Mechanics Implementation:
+Connect the Dots: Used the DOM API to track mouse/touch coordinates and dynamically generated SVG <path> elements to draw the connecting lines.
+Jigsaw Puzzle: Implemented the native HTML5 Drag and Drop API, utilizing dragstart, dragover, and drop event listeners to snap pieces into a CSS Grid board.
+Jumble Words: Used basic DOM manipulation to append and remove letter tiles between different flex containers, validating the text arrays on each click.
+3. AI & Machine Learning Integration
+Library: Imported HandLandmarker and FilesetResolver from the @mediapipe/tasks-vision module via unpkg CDN.
+Camera Access: Used navigator.mediaDevices.getUserMedia() to prompt the user for webcam access and stream it to a hidden HTML <video> element.
+Inference Loop: Set up a requestAnimationFrame loop that constantly feeds video frames to the MediaPipe model to extract 3D hand coordinates.
+Custom Logic: Wrote a custom finger-counting algorithm that determines if exactly two fingers are raised (checking if finger tip Y-coordinates are higher than the PIP joint Y-coordinates).
+4. Running & Testing locally
+Because the webcam API and ES modules are restricted by browser CORS policies when opening files directly (via file://), the project must be run over a local web server.
+
+Run Command:
+bash
+python3 -m http.server 8080
+Access: Navigating to http://localhost:8080 allows the browser to properly load the AI models and request camera permissions.
+5. Deployment
+The project was deployed via Vercel as a static application (using the "Other" framework preset). Because it is purely vanilla HTML/JS, Vercel instantly hosts it without requiring any build commands.
+4:59 PM
+
 
 # Screenshots
 <img width="727" height="572" alt="Screenshot 2026-09-13 164810" src="https://github.com/user-attachments/assets/92e45cda-3f8a-45b1-b6c9-bc899fb52a70" />
