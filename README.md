@@ -84,26 +84,47 @@ For Software:
 
 # Screenshots
 <img width="727" height="572" alt="Screenshot 2026-09-13 164810" src="https://github.com/user-attachments/assets/92e45cda-3f8a-45b1-b6c9-bc899fb52a70" />
+
 ![HOME PAGE]
 *The highly satirical Balarama based news website.*
+
+
 <img width="1057" height="850" alt="image" src="https://github.com/user-attachments/assets/bc621007-81de-47ee-b0fb-7f707894c19c" />
+
 ![RIDDLE]
 *The highly satirical Riddle task to go to the next page.*
+
+
+
 <img width="742" height="848" alt="image" src="https://github.com/user-attachments/assets/b357c484-7c1e-4e79-b2e7-3648d178b83b" />
+
 ![Daily news]
 
 <img width="822" height="791" alt="image" src="https://github.com/user-attachments/assets/73499d66-c4f3-4049-877a-137a396b93d4" />
+
 ![puzzle]
 *The Puzzle to unlock the next page of the newspaper*
+
+
 <img width="783" height="862" alt="image" src="https://github.com/user-attachments/assets/8e8cd488-5baa-47bd-84af-c2eee3f8a931" />
+
 ![International news]
 *International news page.*
+
+
 <img width="860" height="790" alt="image" src="https://github.com/user-attachments/assets/3cc174cf-fb6e-4a9d-a4df-f5b0ffdb0405" />
+
 ![Classifieds]
 *The highly satirical Classifieds section featuring vintage comics and characters.*
+
+
 <img width="420" height="528" alt="image" src="https://github.com/user-attachments/assets/c6e8708d-5812-4ee7-ab99-63654aff948d" />
+
 *The AI-Powered Cricket Game where you hold up 2 fingers to swing.*
+
+
 <img width="773" height="807" alt="image" src="https://github.com/user-attachments/assets/c08bb5ef-ee7d-470f-8aff-c1fec5156f1e" />
+
 *Sports page*
 
 
