@@ -332,7 +332,7 @@
         radial-gradient(circle, #e9dcc0 1px, transparent 1px) 0 0/14px 14px,
         #fffdf6;
       overflow: hidden;
-      cursor: var(--devil-cursor);
+      cursor: crosshair;
       touch-action: none;
     }
 
@@ -371,7 +371,7 @@
       font-family: 'Rammetto One', cursive;
       font-weight: 700;
       font-size: 13px;
-      cursor: var(--devil-cursor);
+      cursor: pointer;
       user-select: none;
       touch-action: none;
       transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
@@ -2315,7 +2315,7 @@
 
       if (nextExpected <= sequence.length) {
         dragging = true;
-        document.body.style.cursor = 'var(--devil-cursor)';
+        document.body.style.cursor = 'crosshair';
         updateLiveLine(clientX, clientY);
       }
     }
