@@ -94,7 +94,7 @@ For Software:
 <img width="420" height="528" alt="image" src="https://github.com/user-attachments/assets/c6e8708d-5812-4ee7-ab99-63654aff948d" />
 <img width="773" height="807" alt="image" src="https://github.com/user-attachments/assets/c08bb5ef-ee7d-470f-8aff-c1fec5156f1e" />
 
-![Sports Game](sports_6.jpg)
+
 *The AI-Powered Cricket Game where you hold up 2 fingers to swing.*
 
 ![Classifieds]
