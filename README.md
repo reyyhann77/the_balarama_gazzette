@@ -54,7 +54,10 @@ For Software:
 *Add caption explaining what this shows*
 
 ![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
+*Add caption explaining what this shows*<img width="706" height="697" alt="Screenshot 2026-09-13 165623" src="https://github.com/user-attachments/assets/fd4924a2-80f4-4604-b523-8da863437a93" />
+<img width="815" height="577" alt="Screenshot 2026-09-13 165559" src="https://github.com/user-attachments/assets/bd7f89e1-c48f-4d5c-a9bb-8b01b27108d3" />
+<img width="530" height="670" alt="Screenshot 2026-09-13 165502" src="https://github.com/user-attachments/assets/c61143d4-20af-4632-b1f6-94f2ec9b09a1" />
+
 
 ![Screenshot3](Add screenshot 3 here with proper name)
 *Add caption explaining what this shows*
