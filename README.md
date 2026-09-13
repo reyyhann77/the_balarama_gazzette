@@ -93,7 +93,7 @@ For Software:
 ![Sports Game](sports_6.jpg)
 *The AI-Powered Cricket Game where you hold up 2 fingers to swing.*
 
-![Classifieds](comic.jpg)
+![Classifieds]
 *The highly satirical Classifieds section featuring vintage comics and characters.*
 
 ## Team Contributions
