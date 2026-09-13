@@ -85,7 +85,7 @@ For Software:
 # Screenshots
 <img width="727" height="572" alt="Screenshot 2026-09-13 164810" src="https://github.com/user-attachments/assets/92e45cda-3f8a-45b1-b6c9-bc899fb52a70" />
 <img width="616" height="577" alt="image" src="https://github.com/user-attachments/assets/5ba6c722-867d-49fc-b78d-61ca20ac107b" />
-*The Front Page of The Balarama Gazette with jumbled breaking news.*
+
 
 <img width="706" height="697" alt="Screenshot 2026-09-13 165623" src="https://github.com/user-attachments/assets/fd4924a2-80f4-4604-b523-8da863437a93" />
 <img width="815" height="577" alt="Screenshot 2026-09-13 165559" src="https://github.com/user-attachments/assets/bd7f89e1-c48f-4d5c-a9bb-8b01b27108d3" />
