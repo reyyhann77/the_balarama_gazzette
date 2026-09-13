@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Finger Count Navigation Prototype</title>
+<style>
+  *{ box-sizing:border-box; }
+  body{
+    font-family:-apple-system, sans-serif;
+    margin:0; min-height:100vh;
+    background:#0f1115; color:#fff;
+    overflow-x:hidden;
+  }
+  .page{ display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column; padding:20px; text-align:center; }
+  .page.active{ display:flex; }
+
+  #page1{ background:#c0392b; }
+  #page2{ background:#d68910; }
+  #page3{ background:#27ae60; }
+  #page4{ background:#2980b9; }
+  #page5{ background:#8e44ad; }
+
+  .bignum{ font-size:min(30vw, 220px); font-weight:800; line-height:1; margin:0; text-shadow:0 6px 0 rgba(0,0,0,0.25); }
+  .sub{ font-size:18px; opacity:0.9; margin-top:6px; }
+
+  /* Pinned camera monitor, visible on every page */
+  #camWidget{
+    position:fixed; bottom:16px; right:16px;
+    width:180px; background:#1c1f26; border-radius:14px; padding:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    z-index:50;
+  }
+  #videoWrap{ position:relative; width:100%; aspect-ratio:4/3; border-radius:10px; overflow:hidden; background:#000; }
+  video{ width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  canvas{ position:absolute; top:0; left:0; width:100%; height:100%; transform:scaleX(-1); }
+
+  #status{
+    margin-top:8px; font-size:13px; font-weight:600; text-align:center;
+    background:#2a2e38; padding:6px 10px; border-radius:999px;
+  }
+  #status.detected{ background:#1c8a4b; }
+
+  .stepper{ display:flex; gap:8px; margin-top:22px; }
+  .step-dot{
+    width:14px; height:14px; border-radius:50%; background:rgba(255,255,255,0.35);
+  }
+  .step-dot.active{ background:#fff; }
+</style>
+</head>
+<body>
+
+  <div class="page active" id="page1">
+    <div class="bignum">1</div>
+    <div class="sub">Hold up 1 finger ☝️</div>
+  </div>
+  <div class="page" id="page2">
+    <div class="bignum">2</div>
+    <div class="sub">Hold up 2 fingers ✌️</div>
+  </div>
+  <div class="page" id="page3">
+    <div class="bignum">3</div>
+    <div class="sub">Hold up 3 fingers 🤟</div>
+  </div>
+  <div class="page" id="page4">
+    <div class="bignum">4</div>
+    <div class="sub">Hold up 4 fingers 🖖</div>
+  </div>
+  <div class="page" id="page5">
+    <div class="bignum">5</div>
+    <div class="sub">Open palm 🖐️ — you made it!</div>
+  </div>
+
+  <div class="stepper" id="stepper" style="position:fixed; top:16px; left:50%; transform:translateX(-50%);">
+    <div class="step-dot" data-step="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-dot" data-step="3"></div>
+    <div class="step-dot" data-step="4"></div>
+    <div class="step-dot" data-step="5"></div>
+  </div>
+
+  <div id="camWidget">
+    <div id="videoWrap">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
+    <div id="status">Loading model...</div>
+  </div>
+
+<script type="module">
+  import { HandLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('overlay');
+  const ctx = canvas.getContext('2d');
+  const statusEl = document.getElementById('status');
+  const dots = document.querySelectorAll('.step-dot');
+
+  let handLandmarker;
+  let lastVideoTime = -1;
+  let lastNavTime = 0;
+  const COOLDOWN_MS = 1200;          // min time between page jumps
+  const HOLD_FRAMES_REQUIRED = 8;    // ~ how long a count must be stable before it counts
+  let stableCount = 0;
+  let stableFrames = 0;
+  let currentPage = 1;
+
+  function goTo(n){
+    if (n === currentPage) return;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page' + n).classList.add('active');
+    dots.forEach(d => d.classList.toggle('active', Number(d.dataset.step) === n));
+    currentPage = n;
+  }
+  window.goTo = goTo;
+  dots[0].classList.add('active');
+
+  // Counts extended fingers from 21 hand landmarks.
+  // Index/middle/ring/pinky: extended if tip is above its pip joint (lower y).
+  // Thumb: extended based on x-offset, direction depends on detected handedness.
+  function countFingers(landmarks, handedness){
+    let count = 0;
+    const tips = [8, 12, 16, 20];
+    const pips = [6, 10, 14, 18];
+    tips.forEach((tip, i) => {
+      if (landmarks[tip].y < landmarks[pips[i]].y) count++;
+    });
+    const thumbTip = landmarks[4], thumbIp = landmarks[3];
+    if (handedness === "Right") {
+      if (thumbTip.x < thumbIp.x) count++;
+    } else {
+      if (thumbTip.x > thumbIp.x) count++;
+    }
+    return count;
+  }
+
+  async function setup(){
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numHands: 1
+    });
+
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+    video.srcObject = stream;
+    video.addEventListener('loadeddata', () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      predictLoop();
+    });
+    statusEl.textContent = "Show 1-5 fingers";
+  }
+
+  const drawingUtils = new DrawingUtils(ctx);
+
+  function predictLoop(){
+    if (video.currentTime !== lastVideoTime) {
+      lastVideoTime = video.currentTime;
+      const result = handLandmarker.detectForVideo(video, performance.now());
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (result.landmarks.length > 0) {
+        const landmarks = result.landmarks[0];
+        const handedness = result.handedness[0][0].categoryName; // "Left" | "Right"
+
+        drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, { color: "#fff", lineWidth: 2 });
+        drawingUtils.drawLandmarks(landmarks, { color: "#ffce33", radius: 3 });
+
+        const count = countFingers(landmarks, handedness);
+        statusEl.textContent = `${count} finger${count === 1 ? '' : 's'} detected`;
+        statusEl.classList.toggle('detected', count >= 1 && count <= 5);
+
+        // Debounce: require the same count held for several consecutive frames
+        if (count === stableCount) {
+          stableFrames++;
+        } else {
+          stableCount = count;
+          stableFrames = 1;
+        }
+
+        const now = performance.now();
+        if (
+          stableFrames >= HOLD_FRAMES_REQUIRED &&
+          count >= 1 && count <= 5 &&
+          now - lastNavTime > COOLDOWN_MS
+        ) {
+          lastNavTime = now;
+          goTo(count);
+        }
+      } else {
+        statusEl.textContent = "No hand detected";
+        statusEl.classList.remove('detected');
+        stableCount = -1;
+        stableFrames = 0;
+      }
+    }
+    requestAnimationFrame(predictLoop);
+  }
+
+  setup().catch(err => {
+    statusEl.textContent = "Camera/model error: " + err.message;
+    console.error(err);
+  });
+</script>
+</body>
+</html>

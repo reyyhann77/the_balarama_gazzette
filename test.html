@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Finger Count Connect-the-Dots</title>
+<style>
+  *{ box-sizing:border-box; }
+  body{
+    font-family:-apple-system, sans-serif;
+    margin:0; min-height:100vh;
+    background:#111827; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .layout{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+
+  /* ===== Game board ===== */
+  .board-wrap{ text-align:center; }
+  h1{ margin:0 0 4px; font-size:22px; }
+  .prompt{
+    font-size:20px; font-weight:700; margin:10px 0;
+    background:#1f2937; display:inline-block; padding:8px 22px; border-radius:999px;
+  }
+  .prompt .num{ color:#ffce33; font-size:26px; }
+
+  #board{
+    position:relative;
+    width:420px; height:420px;
+    max-width:90vw; max-height:90vw;
+    background:
+      radial-gradient(circle, #2a3346 1px, transparent 1px) 0 0/16px 16px,
+      #161c2a;
+    border:3px dashed #3b4560;
+    border-radius:16px;
+    overflow:hidden;
+  }
+  svg.link-layer{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  svg.link-layer path{ fill:none; stroke:#ffce33; stroke-width:5; stroke-linecap:round; }
+
+  .dot{
+    position:absolute;
+    width:44px; height:44px;
+    margin-left:-22px; margin-top:-22px;
+    border-radius:50%;
+    background:#1f2937;
+    border:3px solid #4b5568;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:17px;
+    transition: transform .2s ease, background .2s ease, border-color .2s ease;
+  }
+  .dot.done{ background:#1c8a4b; border-color:#2fd66c; transform:scale(1.12); }
+  .dot.next-hint{ box-shadow:0 0 0 6px rgba(255,206,51,0.35); border-color:#ffce33; }
+
+  .success-banner{
+    display:none; margin-top:14px; font-size:20px; font-weight:800; color:#2fd66c;
+  }
+  .success-banner.show{ display:block; animation:pop .4s ease; }
+  @keyframes pop{ 0%{ transform:scale(0.7); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+
+  .reset-btn{
+    display:none; margin-top:14px; font-size:15px; font-weight:700;
+    background:#ffce33; color:#111; border:none; border-radius:10px;
+    padding:10px 22px; cursor:pointer;
+  }
+  .reset-btn.show{ display:inline-block; }
+
+  /* ===== Camera panel ===== */
+  .cam-panel{ text-align:center; }
+  #videoWrap{ position:relative; width:260px; height:195px; border-radius:14px; overflow:hidden; background:#000; }
+  video{ width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  canvas{ position:absolute; top:0; left:0; width:100%; height:100%; transform:scaleX(-1); }
+
+  #status{
+    margin-top:10px; font-size:14px; font-weight:600;
+    background:#1f2937; padding:8px 14px; border-radius:999px;
+  }
+  #status.detected{ background:#1c8a4b; }
+</style>
+</head>
+<body>
+
+  <div class="layout">
+    <div class="board-wrap">
+      <h1>Connect the Dots</h1>
+      <div class="prompt">Show <span class="num" id="promptNum">1</span> finger<span id="promptPlural">s</span></div>
+      <div id="board">
+        <svg class="link-layer" id="linkLayer"></svg>
+      </div>
+      <div class="success-banner" id="successBanner">🎉 All connected! Great job! 🎉</div>
+      <button class="reset-btn" id="resetBtn">Play again</button>
+    </div>
+
+    <div class="cam-panel">
+      <div id="videoWrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div id="status">Loading model...</div>
+    </div>
+  </div>
+
+<script type="module">
+  import { HandLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+  /* ===================== Dot board setup ===================== */
+  const positions = [
+    { x: 50, y: 8 },
+    { x: 90, y: 38 },
+    { x: 74, y: 88 },
+    { x: 26, y: 88 },
+    { x: 10, y: 38 }
+  ];
+
+  const board = document.getElementById('board');
+  const svg = document.getElementById('linkLayer');
+  const promptNum = document.getElementById('promptNum');
+  const promptPlural = document.getElementById('promptPlural');
+  const successBanner = document.getElementById('successBanner');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let expectedNext = 1; // 1..5
+  const dotEls = [];
+
+  positions.forEach((pos, i) => {
+    const num = i + 1;
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (num === 1 ? ' next-hint' : '');
+    dot.style.left = pos.x + '%';
+    dot.style.top = pos.y + '%';
+    dot.textContent = num;
+    board.appendChild(dot);
+    dotEls.push(dot);
+  });
+
+  function getCenter(el){ return { x: el.offsetLeft, y: el.offsetTop }; }
+
+  function drawLine(fromEl, toEl){
+    const from = getCenter(fromEl), to = getCenter(toEl);
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${from.x} ${from.y} L ${to.x} ${to.y}`);
+    path.style.strokeDasharray = '600';
+    path.style.strokeDashoffset = '600';
+    svg.appendChild(path);
+    requestAnimationFrame(() => {
+      path.style.transition = 'stroke-dashoffset .4s ease';
+      path.style.strokeDashoffset = '0';
+    });
+  }
+
+  function updatePrompt(){
+    promptNum.textContent = expectedNext;
+    promptPlural.textContent = expectedNext === 1 ? '' : 's';
+  }
+
+  function registerCount(count){
+    if (count !== expectedNext) return;
+
+    const dot = dotEls[expectedNext - 1];
+    dot.classList.remove('next-hint');
+    dot.classList.add('done');
+
+    if (expectedNext > 1) {
+      drawLine(dotEls[expectedNext - 2], dot);
+    }
+
+    expectedNext++;
+
+    if (expectedNext <= 5) {
+      dotEls[expectedNext - 1].classList.add('next-hint');
+      updatePrompt();
+    } else {
+      successBanner.classList.add('show');
+      resetBtn.classList.add('show');
+    }
+  }
+
+  function resetGame(){
+    expectedNext = 1;
+    dotEls.forEach(d => d.classList.remove('done', 'next-hint'));
+    dotEls[0].classList.add('next-hint');
+    svg.innerHTML = '';
+    successBanner.classList.remove('show');
+    resetBtn.classList.remove('show');
+    updatePrompt();
+  }
+  resetBtn.addEventListener('click', resetGame);
+  updatePrompt();
+
+  window.addEventListener('resize', () => {
+    svg.innerHTML = '';
+    for (let i = 1; i < expectedNext - 1; i++) drawLine(dotEls[i - 1], dotEls[i]);
+  });
+
+  /* ===================== Hand tracking / finger counting ===================== */
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('overlay');
+  const ctx = canvas.getContext('2d');
+  const statusEl = document.getElementById('status');
+
+  let handLandmarker;
+  let lastVideoTime = -1;
+  let lastNavTime = 0;
+  const COOLDOWN_MS = 1200;
+  const HOLD_FRAMES_REQUIRED = 8;
+  let stableCount = 0;
+  let stableFrames = 0;
+
+  function countFingers(landmarks, handedness){
+    let count = 0;
+    const tips = [8, 12, 16, 20];
+    const pips = [6, 10, 14, 18];
+    tips.forEach((tip, i) => {
+      if (landmarks[tip].y < landmarks[pips[i]].y) count++;
+    });
+    const thumbTip = landmarks[4], thumbIp = landmarks[3];
+    if (handedness === "Right") {
+      if (thumbTip.x < thumbIp.x) count++;
+    } else {
+      if (thumbTip.x > thumbIp.x) count++;
+    }
+    return count;
+  }
+
+  async function setup(){
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numHands: 1
+    });
+
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+    video.srcObject = stream;
+    video.addEventListener('loadeddata', () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      predictLoop();
+    });
+    statusEl.textContent = "Show 1 finger to start";
+  }
+
+  const drawingUtils = new DrawingUtils(ctx);
+
+  function predictLoop(){
+    if (video.currentTime !== lastVideoTime) {
+      lastVideoTime = video.currentTime;
+      const result = handLandmarker.detectForVideo(video, performance.now());
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (result.landmarks.length > 0) {
+        const landmarks = result.landmarks[0];
+        const handedness = result.handedness[0][0].categoryName;
+
+        drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, { color: "#fff", lineWidth: 2 });
+        drawingUtils.drawLandmarks(landmarks, { color: "#ffce33", radius: 3 });
+
+        const count = countFingers(landmarks, handedness);
+        statusEl.textContent = `${count} finger${count === 1 ? '' : 's'} detected`;
+        statusEl.classList.toggle('detected', count === expectedNext);
+
+        if (count === stableCount) {
+          stableFrames++;
+        } else {
+          stableCount = count;
+          stableFrames = 1;
+        }
+
+        const now = performance.now();
+        if (
+          stableFrames >= HOLD_FRAMES_REQUIRED &&
+          count === expectedNext &&
+          expectedNext <= 5 &&
+          now - lastNavTime > COOLDOWN_MS
+        ) {
+          lastNavTime = now;
+          registerCount(count);
+        }
+      } else {
+        statusEl.textContent = "No hand detected";
+        statusEl.classList.remove('detected');
+        stableCount = -1;
+        stableFrames = 0;
+      }
+    }
+    requestAnimationFrame(predictLoop);
+  }
+
+  setup().catch(err => {
+    statusEl.textContent = "Camera/model error: " + err.message;
+    console.error(err);
+  });
+</script>
+</body>
+</html>
