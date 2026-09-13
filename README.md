@@ -30,14 +30,13 @@ The Balarama Gazette proudly fixes this problem that nobody asked for, turning e
 ### Technologies/Components Used
 For Software:
 - [Languages used]
+- HTML,CSS,JS,PYTHON
 - [Frameworks used]
-- [Libraries used]
-- [Tools used]
+- Vanilla HTML5: Standard HTML without any templating engines.
+Vanilla CSS3: Custom, hand-written CSS directly embedded in the HTML file (<style> tag) rather than using frameworks like Tailwind, Bootstrap, or Material UI.
+Vanilla JavaScript: The interactive functionality and animations are written using standard DOM APIs within the <script> tags, without relying on libraries like React, Vue, jQuery, or GSAP.
 
-For Hardware:
-- [List main components]
-- [List specifications]
-- [List tools required]
+
 
 ### Implementation
 For Software:
@@ -51,7 +50,7 @@ For Software:
 For Software:
 
 # Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
+<img width="727" height="572" alt="Screenshot 2026-09-13 164810" src="https://github.com/user-attachments/assets/92e45cda-3f8a-45b1-b6c9-bc899fb52a70" /><img width="616" height="577" alt="image" src="https://github.com/user-attachments/assets/5ba6c722-867d-49fc-b78d-61ca20ac107b" />
 *Add caption explaining what this shows*
 
 ![Screenshot2](Add screenshot 2 here with proper name)
@@ -64,37 +63,11 @@ For Software:
 ![Workflow](Add your workflow/architecture diagram here)
 *Add caption explaining your workflow*
 
-For Hardware:
-
-# Schematic & Circuit
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
-
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
-
-# Build Photos
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
-
-### Project Demo
-# Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
-
-# Additional Demos
-[Add any extra demo materials/links]
 
 ## Team Contributions
-- [Name 1]: [Specific contributions]
-- [Name 2]: [Specific contributions]
-- [Name 3]: [Specific contributions]
+- Rayhan KN : [Frontend,Backend]
+- Sreedhar Hari:[Frontend,UI/UX]
+
 
 ---
 Made with ❤️ at TinkerHub Useless Projects 
