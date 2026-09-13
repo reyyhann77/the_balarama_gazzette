@@ -158,6 +158,8 @@ The project was deployed via Vercel as a static application (using the "Other" f
 
 *Sports page*
 
+# Workflow
+<img width="1224" height="1148" alt="WhatsApp Image 2026-09-13 at 5 48 08 PM" src="https://github.com/user-attachments/assets/95a5b02c-d6fc-426c-bc06-4038562172e2" />
 
 
 
